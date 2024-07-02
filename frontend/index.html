@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Partena Payroll Journal Converter - v0.1</title>
+</head>
+<body>
+    <h1>Partena Payroll Journal Converter</h1>
+    <h2>Select PDF files:</h2>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <div><input type="file" id="pdf" name="pdf" multiple accept=".pdf"></div>
+        <div><button id="convert" type="button" onclick="uploadFiles()">Convert</button></div>
+    </form>
+    <div id="downloadLink"></div>
+    <hr />
+    <div id="errors"></div>
+
+    <script>
+        function uploadFiles() {
+            const form = document.getElementById('uploadForm');
+            const formData = new FormData(form);
+
+            const errorsDiv = document.getElementById('errors');
+            const downloadDiv = document.getElementById('downloadLink');
+            errorsDiv.innerHTML = '';
+            downloadDiv.innerHTML = '';
+
+            const fileSelect = document.getElementById('pdf');
+            const convButton = document.getElementById('convert');
+            fileSelect.disabled = true;
+            convButton.disabled = true;
+
+            fetch('/convert', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.csv) {
+                    const blob = new Blob([data.csv], { type: 'text/csv' });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.textContent = 'Save CSV';
+                    downloadDiv.appendChild(link);
+                } else {
+                    const label = document.createElement('b');
+                    label.textContent = 'Conversion failed';
+                    downloadDiv.appendChild(label);
+                }
+
+                if (data.errors) {
+                    const label = document.createElement('h2');
+                    const list = document.createElement('ul');
+                    label.textContent = 'Errors and warnings';
+                    errorsDiv.appendChild(label);
+                    data.errors.forEach(log => {
+                        const li = document.createElement('li');
+                        li.textContent = log;
+                        list.appendChild(li);
+                    });
+                    errorsDiv.appendChild(list);
+                }
+                fileSelect.disabled = false;
+                convButton.disabled = false;
+            })
+            .catch(error => {
+                const label = document.createElement('b');
+                label.textContent = 'Error: ' + error;
+                downloadDiv.appendChild(label);
+                fileSelect.disabled = false;
+                convButton.disabled = false;
+            });
+        }
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,14 @@
+version: '3'
+
+services:
+
+  backend:
+    build: backend
+
+  frontend:
+    build: frontend
+    depends_on:
+      - backend
+    ports:
+      - "${PORT}:80"
+
