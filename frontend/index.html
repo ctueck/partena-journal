@@ -13,7 +13,7 @@
         <div><button id="convert" type="button" onclick="uploadFiles()">Convert</button></div>
     </form>
     <div id="downloadLink"></div>
-    <hr />
+    <pre id="csvFile" style="background: #dadada; padding: 5px; overflow: scroll;"></pre>
     <div id="errors"></div>
 
     <script>
@@ -23,8 +23,10 @@
 
             const errorsDiv = document.getElementById('errors');
             const downloadDiv = document.getElementById('downloadLink');
+            const csvFile = document.getElementById('csvFile');
             errorsDiv.innerHTML = '';
             downloadDiv.innerHTML = '';
+            csvFile.innerHTML = '';
 
             const fileSelect = document.getElementById('pdf');
             const convButton = document.getElementById('convert');
@@ -38,6 +40,7 @@
             .then(response => response.json())
             .then(data => {
                 if (data.csv) {
+                    csvFile.innerHTML = data.csv;
                     const blob = new Blob([data.csv], { type: 'text/csv' });
                     const url = URL.createObjectURL(blob);
                     const link = document.createElement('a');
