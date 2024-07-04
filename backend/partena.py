@@ -117,7 +117,7 @@ class Payslip:
         read a journal line
         """
         # convert amount to decimal
-        if re.match(r'\s*[0-9.,]+\s*', match['value']):
+        if re.match(r'\s*[0-9.,-]+\s*', match['value']):
             amount = Decimal(match['value'].replace(',','.')) * sign
         else:
             amount = Decimal(0)
@@ -214,8 +214,8 @@ class PayrollData:
     RE_HDR_MONTH = r"^\s*N[°r]\s+[0-9 -]+\s+(du|van)\s+(?P<day>[0-9]+)/(?P<month>[0-9]+)/(?P<year>[0-9]+)"
     RE_HDR_STAFF = r"^│(?P<id>[0-9]{6}) (?P<name>\w+)"
     RE_HDR_SECTION = r"^│\s*│\s*$"
-    RE_HDR_NEGATIVE = r"^│\s*NEGATIF"
-    RE_DATA_LINE = r"^│[VZ ]│\s*(?P<code>[0-9]{3}(\-[0-9]{2})?)(\s(?P<days>[0-9]+))?\s*│\s*(?P<hours>[0-9,-]*)\s*│\s*(?P<from>[0-9]*)(\s*-\s*(?P<to>[0-9]+))?\s*│\s*(?P<unit>[0-9,-]*)\s*│(\s*[0-9,-]*\s*│){3}\s*(?P<value>[0-9,-]*)\s*│\s*(?P<gross>[0-9,-]*)\s*│"
+    RE_HDR_NEGATIVE = r"^│\s*NEGATI[E]F"
+    RE_DATA_LINE = r"^│[VZ ]│\s*(?P<code>[0-9]{3}(\-[0-9]{2})?)(\s(?P<days>[0-9-]+))?\s*│\s*(?P<hours>[C0-9,-]*)\s*│\s*(?P<from>[0-9]*)(\s*-\s*(?P<to>[0-9]+))?\s*│\s*(?P<unit>[0-9,-]*)\s*│(\s*[0-9,-]*\s*│){3}\s*(?P<value>[0-9,-]*)\s*│\s*(?P<gross>[0-9,-]*)\s*│"
 
     def __init__(self):
 
@@ -251,10 +251,10 @@ class PayrollData:
             self.current.sign = Decimal('1')
         # new section - reset sign to positive
         elif re.match(self.RE_HDR_SECTION, line):
-            sign = Decimal('1')
+            self.current.sign = Decimal('1')
         # change sign to negative
         elif re.match(self.RE_HDR_NEGATIVE, line):
-            sign = Decimal('-1')
+            self.current.sign = Decimal('-1')
         # parse data line
         elif match := re.match(self.RE_DATA_LINE, line):
             if self.current.staff:
