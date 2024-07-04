@@ -121,6 +121,8 @@ class Payslip:
             amount = Decimal(match['value'].replace(',','.')) * sign
         else:
             amount = Decimal(0)
+            if match['value']:
+                self.errors.append(f"{self.id} {self.name} {self.year}/{self.month}: value '{match['value']}' for code '{match['code']}' could not be parsed")
         # check code against mapped and ignored regexps
         found = False
         for (field, regexp) in self.FIELDS.items():
@@ -231,6 +233,7 @@ class PayrollData:
 
         self.ignored = list()
         self.errors = list()
+        self.debug = list()
         self.data = Staff(self.errors)
         self.current = ParserState()
 
@@ -244,21 +247,26 @@ class PayrollData:
                 self.current.year = match['year']
             if match['month'] != self.current.month:
                 self.current.month = match['month']
+                self.debug.append(f'HDR : month {self.current.year}/{self.current.month}')
         # check if staff member
         elif match := re.match(self.RE_HDR_STAFF, line):
             self.data.upsert(match['id'], match['name'])
             self.current.staff = match['id']
             self.current.sign = Decimal('1')
+            self.debug.append(f'HDR : staff id={self.current.staff} name={match["name"]}')
         # new section - reset sign to positive
         elif re.match(self.RE_HDR_SECTION, line):
             self.current.sign = Decimal('1')
+            self.debug.append(f'+++ : empty line - reset to positive')
         # change sign to negative
         elif re.match(self.RE_HDR_NEGATIVE, line):
             self.current.sign = Decimal('-1')
+            self.debug.append(f'--- : start of negative section')
         # parse data line
         elif match := re.match(self.RE_DATA_LINE, line):
             if self.current.staff:
                 self.data[self.current.staff]['payslips'][self.current.year][self.current.month].read(match, self.current.sign)
+                self.debug.append('DATA: code={code} value={value} (days={days} hours={hours} from={from} to={to} unit={unit})'.format(**match.groupdict()))
             else:
                 self.errors.append(f"[ERROR: data line before staff header] {line}")
                 return False
@@ -311,6 +319,7 @@ def convert():
         'csv': data.serialize_to_csv(),
         'errors': data.errors,
         'ignored': data.ignored,
+        'debug': data.debug,
     }
 
 if __name__ == '__main__':
