@@ -30,6 +30,7 @@ class Calendar:
         '002':      None,   # worked
         '002-08':   None,   # worked (from home)
         '006':      'PH',   # public holiday
+        '006-15':   'PH',   # public holiday (replacement)
         '006-49':   None,   # public holiday worked
         '007':      'AH',   # extra holiday
         '011-04':   'AH',   # extra holiday
